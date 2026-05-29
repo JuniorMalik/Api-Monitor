@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApiMonitor</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        </div>
+        ApiMonitor
+      </div>
+      <form id="login-form">
+        <div class="form-field">
+          <label>Usuário</label>
+          <input type="text" id="login-user" required />
+        </div>
+        <div class="form-field">
+          <label>Senha</label>
+          <input type="password" id="login-pass" required />
+        </div>
+        <button type="submit" class="btn btn-primary login-btn">Entrar</button>
+      </form>
+      <div style="margin-top: 24px; font-size: 12px; color: rgba(255,255,255,0.5); font-family: var(--font-mono);">Created By: Wilson Borges</div>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>
+      </div>
+      <div class="brand-name">ApiMonitor</div>
+    </div>
+    <div class="header-actions">
+      <div class="status-global">
+        <div class="status-dot" id="ws-dot"></div>
+        <span id="ws-label">Conectando...</span>
+      </div>
+      <button class="btn btn-outline" id="btn-users">Usuários</button>
+      <button class="btn btn-primary" id="btn-add-endpoint">Novo Endpoint</button>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-label">Total</div>
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-desc">Endpoints cadastrados</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Online</div>
+        <div class="stat-number" id="stat-up" style="color: var(--success-text)">0</div>
+        <div class="stat-desc">Respondendo OK</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Offline</div>
+        <div class="stat-number" id="stat-down" style="color: var(--danger-text)">0</div>
+        <div class="stat-desc">Falhando</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Uptime Médio</div>
+        <div class="stat-number" id="stat-uptime">0%</div>
+        <div class="stat-desc">Histórico recente</div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      Monitoramento
+      <span style="font-size: 13px; font-weight: normal; color: var(--text-secondary);" id="last-update">Atualizando...</span>
+    </div>
+
+    <div class="grid" id="endpoints-grid">
+      <div class="empty-state">
+        <h3 style="color: var(--text-white);">Carregando endpoints</h3>
+        <p style="color: var(--text-secondary);">Aguarde...</p>
+      </div>
+    </div>
+
+    <div class="watermark">Created By: Wilson Borges</div>
+
+  </main>
+
+  <!-- Toasts -->
+  <div class="toast-wrap" id="toast-container"></div>
+
+  <!-- Modal ADD/EDIT -->
+  <div class="overlay" id="modal-add">
+    <div class="dialog">
+      <div class="dialog-header">
+        <div class="dialog-title" id="modal-add-title">Adicionar Endpoint</div>
+        <button class="btn-icon" id="btn-close-modal">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-field">
+          <label>Nome da Aplicação</label>
+          <input type="text" id="input-nome" placeholder="ex: API Produção" />
+        </div>
+        <div class="form-field">
+          <label>URL</label>
+          <input type="url" id="input-url" placeholder="https://..." />
+        </div>
+        <div class="form-field">
+          <label>Intervalo de ping</label>
+          <select id="input-interval">
+            <option value="1">1 minuto</option>
+            <option value="5" selected>5 minutos</option>
+            <option value="15">15 minutos</option>
+            <option value="30">30 minutos</option>
+            <option value="60">1 hora</option>
+          </select>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-outline" id="btn-cancel-modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-endpoint">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal HISTORY -->
+  <div class="overlay" id="modal-history">
+    <div class="dialog large">
+      <div class="dialog-header">
+        <div class="dialog-title" id="history-title">Histórico</div>
+        <button class="btn-icon" id="btn-close-history">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="chart-box">
+          <canvas id="latency-chart" height="70"></canvas>
+        </div>
+        <div class="hist-list" id="history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal USERS -->
+  <div class="overlay" id="modal-users">
+    <div class="dialog">
+      <div class="dialog-header">
+        <div class="dialog-title">Gestão de Usuários</div>
+        <button class="btn-icon" id="btn-close-users">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="hist-list" id="users-list" style="max-height: 200px; margin-bottom: 20px;"></div>
+        
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+          <div class="dialog-title" style="font-size: 14px; margin-bottom: 12px;">Novo Usuário</div>
+          <div class="form-field">
+            <label>Usuário</label>
+            <input type="text" id="input-new-user" placeholder="Nome de usuário" />
+          </div>
+          <div class="form-field">
+            <label>Senha</label>
+            <input type="password" id="input-new-pass" placeholder="Senha" />
+          </div>
+          <button class="btn btn-primary" id="btn-save-user" style="width: 100%; justify-content: center;">Adicionar Usuário</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=2"></script>
+</body>
+</html>

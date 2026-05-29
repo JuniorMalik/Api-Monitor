@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+apscheduler
+httpx
+pydantic
+python-jose[cryptography]
+bcrypt
+python-multipart
+arq
+asyncpg
+redis
